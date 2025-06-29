@@ -1,0 +1,86 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database for Development
+  postgres:
+    image: postgres:14-alpine
+    container_name: amanah-digital-db-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: amanah_digital_dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: dev_password_123
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+      - ./src/backend/database/init:/docker-entrypoint-initdb.d
+    networks:
+      - amanah-dev-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for Session Storage (Development)
+  redis:
+    image: redis:7-alpine
+    container_name: amanah-digital-redis-dev
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_dev_data:/data
+    networks:
+      - amanah-dev-network
+    command: redis-server --appendonly yes --requirepass dev_redis_password
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # pgAdmin for Database Management (Optional)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: amanah-digital-pgadmin-dev
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@amanahdigital.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "8080:80"
+    volumes:
+      - pgadmin_dev_data:/var/lib/pgadmin
+    networks:
+      - amanah-dev-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # MailHog for Email Testing (Development)
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: amanah-digital-mailhog-dev
+    restart: unless-stopped
+    ports:
+      - "1025:1025"  # SMTP server
+      - "8025:8025"  # Web UI
+    networks:
+      - amanah-dev-network
+
+volumes:
+  postgres_dev_data:
+    driver: local
+  redis_dev_data:
+    driver: local
+  pgadmin_dev_data:
+    driver: local
+
+networks:
+  amanah-dev-network:
+    driver: bridge
+    name: amanah-dev-network
