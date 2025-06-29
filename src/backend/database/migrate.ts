@@ -1,7 +1,13 @@
 import fs from 'fs';
 import path from 'path';
+import dotenv from 'dotenv';
 import { query } from '../config/database';
 import { logger } from '../utils/logger';
+
+// Load environment variables from the backend .env file
+dotenv.config({ path: path.join(__dirname, '../../.env') });
+
+
 
 interface Migration {
   id: number;
@@ -11,7 +17,15 @@ interface Migration {
 
 // Create migrations table if it doesn't exist
 const createMigrationsTable = async (): Promise<void> => {
-  const createTableQuery = `
+  const USE_SQLITE = process.env['USE_SQLITE'] === 'true' || process.env['NODE_ENV'] === 'development';
+  
+  const createTableQuery = USE_SQLITE ? `
+    CREATE TABLE IF NOT EXISTS migrations (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      filename TEXT UNIQUE NOT NULL,
+      executed_at TEXT DEFAULT (datetime('now'))
+    );
+  ` : `
     CREATE TABLE IF NOT EXISTS migrations (
       id SERIAL PRIMARY KEY,
       filename VARCHAR(255) UNIQUE NOT NULL,
@@ -31,12 +45,17 @@ const getExecutedMigrations = async (): Promise<string[]> => {
 
 // Record migration as executed
 const recordMigration = async (filename: string): Promise<void> => {
-  await query('INSERT INTO migrations (filename) VALUES ($1)', [filename]);
+  const USE_SQLITE = process.env['USE_SQLITE'] === 'true' || process.env['NODE_ENV'] === 'development';
+  const insertQuery = USE_SQLITE ? 
+    'INSERT INTO migrations (filename) VALUES (?)' : 
+    'INSERT INTO migrations (filename) VALUES ($1)';
+  await query(insertQuery, [filename]);
 };
 
 // Get all migration files
 const getMigrationFiles = (): string[] => {
-  const migrationsDir = path.join(__dirname, 'migrations');
+  const migrationsDir = path.join(__dirname, '../../database/migrations');
+  const USE_SQLITE = process.env['USE_SQLITE'] === 'true' || process.env['NODE_ENV'] === 'development';
   
   if (!fs.existsSync(migrationsDir)) {
     logger.warn('Migrations directory does not exist');
@@ -44,13 +63,23 @@ const getMigrationFiles = (): string[] => {
   }
   
   return fs.readdirSync(migrationsDir)
-    .filter(file => file.endsWith('.sql'))
+    .filter(file => {
+      if (USE_SQLITE) {
+        // Prefer SQLite-specific migrations, fallback to regular ones
+        return file.endsWith('_sqlite.sql') || 
+               (file.endsWith('.sql') && !file.includes('_sqlite') && 
+                !fs.existsSync(path.join(migrationsDir, file.replace('.sql', '_sqlite.sql'))));
+      } else {
+        // Use PostgreSQL migrations (exclude SQLite-specific ones)
+        return file.endsWith('.sql') && !file.includes('_sqlite');
+      }
+    })
     .sort();
 };
 
 // Execute a single migration
 const executeMigration = async (filename: string): Promise<void> => {
-  const migrationPath = path.join(__dirname, 'migrations', filename);
+  const migrationPath = path.join(__dirname, '../../database/migrations', filename);
   const migrationSQL = fs.readFileSync(migrationPath, 'utf8');
   
   try {
@@ -110,6 +139,8 @@ export const runMigrations = async (): Promise<void> => {
 // Rollback last migration (basic implementation)
 export const rollbackLastMigration = async (): Promise<void> => {
   try {
+    const USE_SQLITE = process.env['USE_SQLITE'] === 'true' || process.env['NODE_ENV'] === 'development';
+    
     const result = await query(
       'SELECT filename FROM migrations ORDER BY id DESC LIMIT 1'
     );
@@ -122,7 +153,10 @@ export const rollbackLastMigration = async (): Promise<void> => {
     const lastMigration = result.rows[0].filename;
     
     // Remove from migrations table
-    await query('DELETE FROM migrations WHERE filename = $1', [lastMigration]);
+    const deleteQuery = USE_SQLITE ? 
+      'DELETE FROM migrations WHERE filename = ?' : 
+      'DELETE FROM migrations WHERE filename = $1';
+    await query(deleteQuery, [lastMigration]);
     
     logger.warn(`Rolled back migration: ${lastMigration}`);
     logger.warn('Note: This only removes the migration record. Manual cleanup may be required.');

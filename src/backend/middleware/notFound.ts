@@ -1,7 +1,7 @@
-import { NextFunction, Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { logger } from '../utils/logger';
 
-export const notFound = (req: Request, res: Response, next: NextFunction): void => {
+export const notFound = (req: Request, res: Response, _next: NextFunction): void => {
   const message = `Not found - ${req.originalUrl}`;
   logger.warn(message);
   

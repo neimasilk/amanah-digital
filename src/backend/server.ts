@@ -16,12 +16,12 @@ import { runMigrations } from './database/migrate';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env['PORT'] || 5000;
 
 // Security middleware
 app.use(helmet());
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: process.env['FRONTEND_URL'] || 'http://localhost:3000',
   credentials: true
 }));
 
@@ -44,7 +44,7 @@ app.use(compression());
 app.use(morgan('combined', { stream: { write: (message) => logger.info(message.trim()) } }));
 
 // Health check endpoint
-app.get('/health', (req, res) => {
+app.get('/health', (_req, res) => {
   res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
@@ -68,7 +68,7 @@ const startServer = async () => {
     
     app.listen(PORT, () => {
       logger.info(`Server running on port ${PORT}`);
-      logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
+      logger.info(`Environment: ${process.env['NODE_ENV'] || 'development'}`);
     });
   } catch (error) {
     logger.error('Failed to start server:', error);
@@ -76,6 +76,9 @@ const startServer = async () => {
   }
 };
 
-startServer();
+// Only start server if not in test environment
+if (process.env['NODE_ENV'] !== 'test') {
+  startServer();
+}
 
 export default app;

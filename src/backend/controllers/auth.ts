@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import crypto from 'crypto';
 import { asyncHandler } from '../middleware/errorHandler';
 import { AuthenticatedRequest } from '../middleware/auth';
@@ -20,24 +20,27 @@ interface User {
   updated_at: Date;
 }
 
-// Generate JWT Token
+// Generate JWT Token dengan expiry time yang aman
 const generateToken = (id: string): string => {
-  return jwt.sign({ id }, process.env.JWT_SECRET!, {
-    expiresIn: process.env.JWT_EXPIRE || '24h',
-  });
+  const options: SignOptions = {
+    expiresIn: (process.env['JWT_EXPIRE'] || '24h') as any, // Token expire dalam 24 jam untuk keamanan
+  };
+  // Menggunakan user ID sebagai payload untuk meminimalkan data sensitif dalam token
+  return jwt.sign({ id }, process.env['JWT_SECRET']!, options);
 };
 
-// Send token response
+// Send token response with secure cookie configuration
 const sendTokenResponse = (user: Partial<User>, statusCode: number, res: Response): void => {
   const token = generateToken(user.id!);
 
+  // Cookie options untuk keamanan maksimal
   const options = {
     expires: new Date(
-      Date.now() + (parseInt(process.env.JWT_COOKIE_EXPIRE!) || 24) * 24 * 60 * 60 * 1000
+      Date.now() + (parseInt(process.env['JWT_COOKIE_EXPIRE']!) || 24) * 24 * 60 * 60 * 1000
     ),
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict' as const,
+    httpOnly: true, // Mencegah akses JavaScript client-side untuk menghindari XSS
+    secure: process.env['NODE_ENV'] === 'production', // HTTPS only di production
+    sameSite: 'strict' as const, // Mencegah CSRF attacks
   };
 
   res.status(statusCode)
@@ -90,7 +93,7 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
   
   logger.info(`New user registered: ${email}`);
   
-  sendTokenResponse(user, 201, res);
+  return sendTokenResponse(user, 201, res);
 });
 
 // @desc    Login user
@@ -126,19 +129,19 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
 
   logger.info(`User logged in: ${email}`);
   
-  sendTokenResponse(user, 200, res);
+  return sendTokenResponse(user, 200, res);
 });
 
 // @desc    Logout user / clear cookie
 // @route   POST /api/auth/logout
 // @access  Public
-export const logout = asyncHandler(async (req: Request, res: Response) => {
+export const logout = asyncHandler(async (_req: Request, res: Response) => {
   res.cookie('token', 'none', {
     expires: new Date(Date.now() + 10 * 1000),
     httpOnly: true,
   });
 
-  res.status(200).json({
+  return res.status(200).json({
     success: true,
     data: { message: 'User logged out successfully' },
   });
@@ -155,7 +158,7 @@ export const getMe = asyncHandler(async (req: AuthenticatedRequest, res: Respons
 
   const user = result.rows[0];
 
-  res.status(200).json({
+  return res.status(200).json({
     success: true,
     data: {
       user: {
@@ -209,7 +212,7 @@ export const forgotPassword = asyncHandler(async (req: Request, res: Response) =
       message,
     });
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       data: { message: 'Email sent' },
     });
@@ -264,7 +267,7 @@ export const resetPassword = asyncHandler(async (req: Request, res: Response) =>
 
   logger.info(`Password reset for user: ${user.email}`);
   
-  sendTokenResponse(user, 200, res);
+  return sendTokenResponse(user, 200, res);
 });
 
 // @desc    Update password
@@ -303,5 +306,5 @@ export const updatePassword = asyncHandler(async (req: AuthenticatedRequest, res
 
   logger.info(`Password updated for user: ${user.email}`);
   
-  sendTokenResponse(user, 200, res);
+  return sendTokenResponse(user, 200, res);
 });

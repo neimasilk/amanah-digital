@@ -10,25 +10,25 @@ interface EmailOptions {
 
 const createTransporter = () => {
   // For development, use Ethereal Email (fake SMTP service)
-  if (process.env.NODE_ENV === 'development') {
-    return nodemailer.createTransporter({
+  if (process.env['NODE_ENV'] === 'development') {
+    return nodemailer.createTransport({
       host: 'smtp.ethereal.email',
       port: 587,
       auth: {
-        user: process.env.SMTP_EMAIL || 'ethereal.user@ethereal.email',
-        pass: process.env.SMTP_PASSWORD || 'ethereal.pass'
+        user: process.env['SMTP_EMAIL'] || 'ethereal.user@ethereal.email',
+      pass: process.env['SMTP_PASSWORD'] || 'ethereal.pass'
       }
     });
   }
 
   // For production, use real SMTP service
-  return nodemailer.createTransporter({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: process.env.SMTP_PORT === '465', // true for 465, false for other ports
-    auth: {
-      user: process.env.SMTP_EMAIL,
-      pass: process.env.SMTP_PASSWORD,
+  return nodemailer.createTransport({
+    host: process.env['SMTP_HOST'],
+      port: parseInt(process.env['SMTP_PORT'] || '587'),
+      secure: process.env['SMTP_PORT'] === '465', // true for 465, false for other ports
+      auth: {
+        user: process.env['SMTP_EMAIL'],
+        pass: process.env['SMTP_PASSWORD'],
     },
   });
 };
@@ -38,7 +38,7 @@ export const sendEmail = async (options: EmailOptions): Promise<void> => {
     const transporter = createTransporter();
 
     const message = {
-      from: `${process.env.FROM_NAME || 'Amanah Digital'} <${process.env.FROM_EMAIL || 'noreply@amanahdigital.com'}>`,
+      from: `${process.env['FROM_NAME'] || 'Amanah Digital'} <${process.env['FROM_EMAIL'] || 'noreply@amanahdigital.com'}>`,
       to: options.email,
       subject: options.subject,
       text: options.message,
@@ -50,7 +50,7 @@ export const sendEmail = async (options: EmailOptions): Promise<void> => {
     logger.info(`Email sent to ${options.email}: ${info.messageId}`);
     
     // For development, log the preview URL
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env['NODE_ENV'] === 'development') {
       logger.info(`Preview URL: ${nodemailer.getTestMessageUrl(info)}`);
     }
   } catch (error) {

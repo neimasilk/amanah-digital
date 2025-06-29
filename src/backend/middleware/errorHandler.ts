@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { logger } from '../utils/logger';
 
 export interface CustomError extends Error {
@@ -8,9 +8,9 @@ export interface CustomError extends Error {
 
 export const errorHandler = (
   err: CustomError,
-  req: Request,
+  _req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ): void => {
   let error = { ...err };
   error.message = err.message;
@@ -58,7 +58,7 @@ export const errorHandler = (
     success: false,
     error: {
       message: error.message || 'Server Error',
-      ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+      ...(process.env['NODE_ENV'] === 'development' && { stack: err.stack })
     }
   });
 };

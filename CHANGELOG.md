@@ -14,23 +14,31 @@ dan proyek ini mengikuti [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - Docker Compose untuk development database (PostgreSQL, Redis, pgAdmin, MailHog)
 - Environment variables template (.env.example)
 - Git configuration (.gitignore)
+- **API Documentation** (`docs/API.md`) - Comprehensive API reference untuk authentication endpoints
+- **Troubleshooting Guide** (`docs/TROUBLESHOOTING.md`) - Panduan mengatasi masalah development dan runtime
+- **Enhanced Code Comments** - Detailed comments untuk auth middleware dan controllers dengan fokus security
 
 ### Changed
-- N/A
+- **README.md improvements**: Fixed terminologi konsistensi (credentials → kredensial, crypto → cryptocurrency)
+- **Enhanced auth middleware**: Added comprehensive comments explaining JWT validation logic
+- **Improved auth controller**: Added security-focused comments untuk token generation dan cookie handling
 
 ### Deprecated
 - N/A
 
 ### Removed
-- N/A
+- Non-existent logo reference dari README.md
 
 ### Fixed
-- N/A
+- Terminology inconsistencies dalam dokumentasi
+- Documentation-implementation alignment issues
 
 ### Security
 - Konfigurasi ESLint dengan security rules
 - Environment variables untuk sensitive data
 - Docker development environment dengan proper networking
+- **Enhanced security documentation** dalam troubleshooting guide
+- **Detailed security comments** dalam auth implementation
 
 ---
 

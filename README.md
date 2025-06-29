@@ -1,6 +1,6 @@
 # Amanah Digital - Islamic Inheritance Planning Platform
 
-![Amanah Digital Logo](./docs/images/logo.png)
+# Amanah Digital
 
 **Amanah Digital** adalah platform digital terdepan untuk perencanaan warisan Islam di Indonesia. Platform ini dirancang khusus untuk keluarga Muslim kelas menengah dan profesional urban yang membutuhkan solusi modern untuk mengelola aset digital dan perencanaan warisan sesuai syariat Islam.
 
@@ -16,14 +16,14 @@ Sekaligus mengatasi tantangan pewarisan aset digital modern seperti cryptocurren
 ## ✨ Fitur Utama (MVP)
 
 ### 🔐 Vault Digital Terenkripsi
-- Penyimpanan aman credentials aset digital
-- Enkripsi end-to-end untuk private keys crypto
+- Penyimpanan aman kredensial aset digital
+- Enkripsi end-to-end untuk private keys cryptocurrency
 - Sistem akses darurat untuk ahli waris
 
-### 📊 Kalkulator Faraid (Killer Feature)
+### 📊 Kalkulator Faraid (Fitur Unggulan)
 - Perhitungan otomatis pembagian waris sesuai hukum Islam
-- Visualisasi pembagian dalam bentuk chart/diagram
-- Export hasil perhitungan dalam format PDF
+- Visualisasi pembagian dalam bentuk diagram interaktif
+- Ekspor hasil perhitungan dalam format PDF
 
 ### 📋 Inventarisasi Aset
 - Katalog aset fisik dan digital
@@ -32,7 +32,7 @@ Sekaligus mengatasi tantangan pewarisan aset digital modern seperti cryptocurren
 
 ### 📄 Template Wasiat & Panduan
 - Template wasiat sesuai KUHPerdata Indonesia
-- Panduan batasan wasiat dalam hukum Islam
+- Panduan batasan wasiat dalam hukum Islam (maksimal 1/3 harta)
 - Integrasi dengan direktori notaris terverifikasi
 
 ## 🏗️ Arsitektur Teknis
